@@ -1,0 +1,70 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: applications
+    // Document ID: auto-generated
+    // Fields:
+    //   - fullName: string (required, min 2, max 100)
+    //   - email: string (required, email format)
+    //   - phone: string (required, min 8, max 20)
+    //   - visaType: string (required, 'tourist' or 'student')
+    //   - passportPhotoUrl: string (optional, URL format)
+    //   - idPhotoUrl: string (optional, URL format)
+    //   - createdAt: number (required, timestamp)
+    //   - status: string (required, 'pending', 'reviewed', 'completed')
+    //   - uid: string (required, owner UID)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          (request.auth.token.email == "izaquefbastos@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isValidVisaApplication(data) {
+      return data.keys().hasAll(['fullName', 'email', 'phone', 'address', 'taxId', 'visaType', 'createdAt', 'status', 'uid']) &&
+             data.fullName is string && data.fullName.size() >= 2 && data.fullName.size() <= 100 &&
+             isValidEmail(data.email) &&
+             data.phone is string && data.phone.size() >= 8 && data.phone.size() <= 20 &&
+             data.address is string && data.address.size() >= 5 && data.address.size() <= 200 &&
+             data.taxId is string && data.taxId.size() >= 11 && data.taxId.size() <= 14 &&
+             data.visaType in ['tourist', 'student', 'renewal', 'denial_reversal'] &&
+             data.createdAt is number &&
+             data.status in ['pending', 'reviewed', 'completed'] &&
+             data.uid == request.auth.uid;
+    }
+
+    match /applications/{applicationId} {
+      allow read: if isOwner(resource.data.uid) || isAdmin();
+      allow create: if isAuthenticated() && isValidVisaApplication(request.resource.data);
+      allow update: if isAdmin() || (isOwner(resource.data.uid) && isValidVisaApplication(request.resource.data) && request.resource.data.uid == resource.data.uid);
+      allow delete: if isAdmin();
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isAuthenticated() && isOwner(userId) && request.resource.data.role == 'client';
+      allow update: if isAdmin();
+    }
+  }
+}

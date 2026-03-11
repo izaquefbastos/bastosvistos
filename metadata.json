@@ -1,0 +1,5 @@
+{
+  "name": "Bastos Vistos - Assessoria de Vistos Americanos",
+  "description": "Assessoria especializada para solicitação de vistos americanos de turismo e estudante para brasileiros.",
+  "requestFramePermissions": ["camera"]
+}

@@ -1,0 +1,65 @@
+{
+  "entities": {
+    "VisaApplication": {
+      "title": "Visa Application",
+      "description": "Information about a client's visa application.",
+      "type": "object",
+      "properties": {
+        "fullName": {
+          "type": "string",
+          "description": "Full name of the applicant."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Email address of the applicant."
+        },
+        "phone": {
+          "type": "string",
+          "description": "Phone number of the applicant."
+        },
+        "address": {
+          "type": "string",
+          "description": "Home address of the applicant."
+        },
+        "taxId": {
+          "type": "string",
+          "description": "Tax ID (CPF) of the applicant."
+        },
+        "visaType": {
+          "type": "string",
+          "enum": ["tourist", "student", "renewal", "denial_reversal"],
+          "description": "The type of visa requested."
+        },
+        "passportPhotoUrl": {
+          "type": "string",
+          "description": "URL of the uploaded passport photo."
+        },
+        "idPhotoUrl": {
+          "type": "string",
+          "description": "URL of the uploaded ID photo."
+        },
+        "createdAt": {
+          "type": "number",
+          "description": "Timestamp when the application was created."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "reviewed", "completed"],
+          "description": "Current status of the application."
+        },
+        "uid": {
+          "type": "string",
+          "description": "The Firebase Auth UID of the user who created the application."
+        }
+      },
+      "required": ["fullName", "email", "phone", "address", "taxId", "visaType", "createdAt", "status", "uid"]
+    }
+  },
+  "firestore": {
+    "/applications/{applicationId}": {
+      "schema": "VisaApplication",
+      "description": "Collection of visa applications."
+    }
+  }
+}
